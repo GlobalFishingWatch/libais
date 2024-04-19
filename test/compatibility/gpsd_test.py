@@ -58,7 +58,7 @@ class SingleMessageTestsTest(unittest.TestCase):
         'second': 57,
         'maneuver': 0,
         'raim': False}
-    self.assertDictContainsSubset2(expected, mangled)
+    self.assertDictContainsSubset2(mangled, expected)
 
     # Float values will not match, so just test existence.
     for field in ('lat', 'lon'):
@@ -77,7 +77,7 @@ class SingleMessageTestsTest(unittest.TestCase):
         'shiptype': 204,
         'shiptype_text': '204 - Unknown',
         'type': 5}
-    self.assertDictContainsSubset2(expected, mangled)
+    self.assertDictContainsSubset2(mangled, expected)
 
   def testTimestamps(self):
     msg = {
@@ -97,7 +97,7 @@ class SingleMessageTestsTest(unittest.TestCase):
         'timestamp': '2015-05-15T09:27:23Z',
         'tagblock_timestamp': '2015-05-15T09:27:23.000000Z'
         }
-    self.assertDictContainsSubset2(expected, mangled)
+    self.assertDictContainsSubset2(mangled, expected)
 
 
 class StreamingTest(unittest.TestCase):
