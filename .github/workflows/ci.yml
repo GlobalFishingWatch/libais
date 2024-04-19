@@ -22,9 +22,6 @@ jobs:
         python-version: ['3.7', '3.8', '3.9', '3.10']
     steps:
       - name: Add required sources and pkgs
-#        run: |
-#          sudo add-apt-repository --update --yes 'deb http://archive.ubuntu.com/ubuntu/ bionic main universe'
-#          sudo apt-get install gcc-6 g++-6
 
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -33,13 +30,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-#          architecture: 'x64'
 
       - name: Before install
         run: |
-#          mkdir --parents --verbose ${{ env.PIP_WHEEL_DIR }}
           python -m pip install --upgrade pip
-#          pip install setuptools --upgrade
           pip install pytest --upgrade
 
       - name: Install
