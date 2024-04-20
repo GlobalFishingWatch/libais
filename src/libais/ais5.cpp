@@ -4,16 +4,12 @@
 
 namespace libais {
 
-Ais5::Ais5(const char *nmea_payload, const size_t pad)
-    : AisMsg(nmea_payload, pad), ais_version(0), imo_num(0),
+Ais5::Ais5(const char *nmea_payload, const size_t pad, const bool best_effort)
+    : AisMsg(nmea_payload, pad, best_effort), ais_version(0), imo_num(0),
       type_and_cargo(0), dim_a(0), dim_b(0), dim_c(0), dim_d(0),
       fix_type(0), eta_month(0), eta_day(0), eta_hour(0), eta_minute(0),
       draught(0.0), dte(0), spare(0) {
-  if (!CheckStatus()) {
-    return;
-  }
-  if (pad != 2 || num_chars != 71) {
-    status = AIS_ERR_BAD_BIT_COUNT;
+  if (!CheckStatus() || !CheckNumBits(424)) {
     return;
   }
 

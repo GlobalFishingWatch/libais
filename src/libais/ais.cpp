@@ -68,9 +68,9 @@ const char * const AIS_STATUS_STRINGS[AIS_STATUS_NUM_CODES] = {
   "AIS_ERR_BAD_SUB_SUB_MSG",
 };
 
-AisMsg::AisMsg(const char *nmea_payload, const size_t pad)
+AisMsg::AisMsg(const char *nmea_payload, const size_t pad, const bool best_effort)
     : message_id(0), repeat_indicator(0), mmsi(0), status(AIS_UNINITIALIZED),
-      num_chars(0), num_bits(0), bits() {
+      best_effort(best_effort), num_chars(0), num_bits(0), bits() {
   assert(nmea_payload);
   assert(pad < 6);
 
@@ -102,6 +102,14 @@ bool AisMsg::CheckStatus() const {
             << std::endl;
 #endif
   return false;
+}
+
+bool AisMsg::CheckNumBits(size_t expected_num_bits) {
+  bool ok = best_effort ? num_bits >= expected_num_bits : num_bits == expected_num_bits;
+  if (!ok) {
+    status = AIS_ERR_BAD_BIT_COUNT;
+  }
+  return ok;
 }
 
 AisPoint::AisPoint() : lng_deg(0), lat_deg(0) {

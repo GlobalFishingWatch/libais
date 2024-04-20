@@ -444,17 +444,21 @@ class AisMsg {
 
  protected:
   AIS_STATUS status;  // AIS_OK or error code
+  bool best_effort = false;  // Use best effort to parse
   int num_chars;  // Number of characters in the nmea_payload.
   size_t num_bits;  // Number of bits in the nmea_payload.
   AisBitset bits;  // The bitset that was constructed out of the nmea_payload.
 
   AisMsg() : status(AIS_UNINITIALIZED), num_chars(0), num_bits(0), bits() {}
-  AisMsg(const char *nmea_payload, const size_t pad);
+  AisMsg(const char *nmea_payload, const size_t pad, const bool best_effort = false);
 
   // Returns true if the msg is in a good state "so far", i.e. either AIS_OK or
   // AIS_UNINITIALIZED.
   bool CheckStatus() const;
+  bool CheckNumBits(size_t expected_num_bits);
 };
+
+
 
 // TODO(schwehr): factor out commstate from all messages?
 class Ais1_2_3 : public AisMsg {
@@ -504,7 +508,7 @@ class Ais1_2_3 : public AisMsg {
   bool keep_flag_valid;
   bool keep_flag;  // 3.3.7.3.2 Annex 2 ITDMA.  Table 20
 
-  Ais1_2_3(const char *nmea_payload, const size_t pad);
+  Ais1_2_3(const char *nmea_payload, const size_t pad, const bool best_effort=false);
 };
 ostream& operator<< (ostream &o, const Ais1_2_3 &msg);
 
@@ -569,7 +573,7 @@ class Ais5 : public AisMsg {
   int dte;
   int spare;
 
-  Ais5(const char *nmea_payload, const size_t pad);
+  Ais5(const char *nmea_payload, const size_t pad, const bool best_effort=false);
 };
 ostream& operator<< (ostream &o, const Ais5 &msg);
 

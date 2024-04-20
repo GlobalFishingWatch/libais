@@ -8,8 +8,8 @@ using std::abs;
 
 namespace libais {
 
-Ais1_2_3::Ais1_2_3(const char *nmea_payload, const size_t pad)
-    : AisMsg(nmea_payload, pad), nav_status(0), rot_over_range(false),
+Ais1_2_3::Ais1_2_3(const char *nmea_payload, const size_t pad, const bool best_effort)
+    : AisMsg(nmea_payload, pad, best_effort), nav_status(0), rot_over_range(false),
       rot_raw(0), rot(0.0), sog(0.0), position_accuracy(0),
       cog(0.0), true_heading(0), timestamp(0), special_manoeuvre(0), spare(0),
       raim(false), sync_state(0),
@@ -21,11 +21,7 @@ Ais1_2_3::Ais1_2_3(const char *nmea_payload, const size_t pad)
       slot_increment_valid(false), slot_increment(0),
       slots_to_allocate_valid(false), slots_to_allocate(0),
       keep_flag_valid(false), keep_flag(false) {
-  if (!CheckStatus()) {
-    return;
-  }
-  if (pad != 0 || num_chars != 28) {
-    status = AIS_ERR_BAD_BIT_COUNT;
+  if (!CheckStatus() || !CheckNumBits(168)) {
     return;
   }
 
