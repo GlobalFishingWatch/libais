@@ -15,8 +15,7 @@ import hashlib
 import logging
 import re
 
-import six
-import six.moves.queue as Queue
+import queue
 
 import ais
 from ais import nmea
@@ -80,7 +79,7 @@ def Parse(data):
     return
 
   result.update({k: util.MaybeToNumber(v)
-                 for k, v in six.iteritems(result) if k in NUMERIC_FIELDS})
+                 for k, v in result.items() if k in NUMERIC_FIELDS})
 
   actual = nmea.Checksum(result['metadata'])
   expected = result['tag_checksum'].upper()
@@ -90,7 +89,7 @@ def Parse(data):
   return result
 
 
-class TagQueue(Queue.Queue):
+class TagQueue(queue.Queue):
   """Aggregate TAG Block group messages into logical units.
 
   This queue tracks message lines with the "g" group TAG and finds matching
@@ -100,7 +99,7 @@ class TagQueue(Queue.Queue):
   def __init__(self):
     self.groups = {}
     self.line_num = 0
-    Queue.Queue.__init__(self)
+    queue.Queue.__init__(self)
 
   def put(self, line, line_num=None):
     if line_num is not None:
@@ -112,7 +111,7 @@ class TagQueue(Queue.Queue):
     match = Parse(line)
 
     if not match:
-      Queue.Queue.put(self, {
+      queue.Queue.put(self, {
           'line_nums': [self.line_num],
           'lines': [line],
       })
@@ -137,7 +136,7 @@ class TagQueue(Queue.Queue):
           msg['decoded'] = decoded
         else:
           logger.info('No NMEA match for line: %d, %s', self.line_num, line)
-      Queue.Queue.put(self, msg)
+      queue.Queue.put(self, msg)
       return
 
     sentence_num = int(match['sentence_num'])
@@ -173,7 +172,7 @@ class TagQueue(Queue.Queue):
       entry['decoded'] = decoded
     else:
       logger.info('Unable to process: %s', entry)
-    Queue.Queue.put(self, entry)
+    queue.Queue.put(self, entry)
     self.groups.pop(group_id)
 
 

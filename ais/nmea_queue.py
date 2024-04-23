@@ -7,21 +7,21 @@ from ais import nmea
 from ais import tag_block
 from ais import uscg
 from ais import vdm
-import six.moves.queue as Queue
+import queue
 
 
 class Error(Exception):
   pass
 
 
-def GetOrNone(queue):
+def GetOrNone(_queue):
   try:
-    return queue.get(block=False)
-  except Queue.Empty:
+    return _queue.get(block=False)
+  except queue.Empty:
     return
 
 
-class NmeaQueue(Queue.Queue):
+class NmeaQueue(queue.Queue):
   # pylint: disable=line-too-long
   r"""Process mixed text, bare NMEA or NMEA with TAG BLOCK or USCG metadata.
 
@@ -109,7 +109,7 @@ class NmeaQueue(Queue.Queue):
     self.tagb_queue = tag_block.TagQueue()
     self.uscg_queue = uscg.UscgQueue()
     self.line_num = 0
-    Queue.Queue.__init__(self)
+    queue.Queue.__init__(self)
 
   def put(self, line, line_num=None):
     """Add a line to the queue.
@@ -145,10 +145,10 @@ class NmeaQueue(Queue.Queue):
 
     if msg:
       msg['line_type'] = line_type
-      Queue.Queue.put(self, msg)
+      queue.Queue.put(self, msg)
 
   def GetOrNone(self):
     try:
       return self.get(block=False)
-    except Queue.Empty:
+    except queue.Empty:
       return

@@ -62,8 +62,7 @@ import hashlib
 import logging
 import re
 
-import six
-import six.moves.queue as Queue
+import queue
 
 import ais
 from ais import nmea
@@ -108,7 +107,7 @@ def VdmLines(lines):
 def Parse(data):
   """Unpack a NMEA VDM AIS message line(s)."""
 
-  if not isinstance(data, six.string_types):
+  if not isinstance(data, str):
     raise NotImplementedError
 
   try:
@@ -117,7 +116,7 @@ def Parse(data):
     return
 
   result.update({k: util.MaybeToNumber(v)
-                 for k, v in six.iteritems(result) if k in NUMERIC_FIELDS})
+                 for k, v in result.items() if k in NUMERIC_FIELDS})
 
   actual = nmea.Checksum(result['vdm'])
   expected = result['checksum']
@@ -127,7 +126,7 @@ def Parse(data):
   return result
 
 
-class BareQueue(Queue.Queue):
+class BareQueue(queue.Queue):
   """Build complete AIS messages and create a queue of decoded content.
 
   Manages parsing a stream of NMEA AIS VDM messages.  Single line
@@ -140,7 +139,7 @@ class BareQueue(Queue.Queue):
   def __init__(self):
     self.groups = {}
     self.line_num = 0
-    Queue.Queue.__init__(self)
+    queue.Queue.__init__(self)
 
   def put(self, line, line_num=None):
     """Add a line of NMEA or raw text to the queue."""
@@ -164,7 +163,7 @@ class BareQueue(Queue.Queue):
         msg['decoded'] = decoded
       else:
         logger.info('No NMEA match for line: %d, %s', line_num, line)
-      Queue.Queue.put(self, msg)
+      queue.Queue.put(self, msg)
       return
 
     sentence_total = int(match['sen_tot'])
@@ -178,7 +177,7 @@ class BareQueue(Queue.Queue):
             'Unable to decode message: %s\n  %d %s', error, line_num, line)
         return
       decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
-      Queue.Queue.put(self, {
+      queue.Queue.put(self, {
           'line_nums': [line_num],
           'lines': [line],
           'decoded': decoded,
@@ -231,5 +230,5 @@ class BareQueue(Queue.Queue):
     entry['decoded'] = decoded
 
     # Found the final message in a group.
-    Queue.Queue.put(self, entry)
+    queue.Queue.put(self, entry)
     self.groups.pop(group_id)

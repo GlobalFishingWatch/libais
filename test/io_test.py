@@ -6,7 +6,7 @@ import sys
 import ais
 
 import pytest
-from six.moves import StringIO
+from io import StringIO
 
 
 def test_open_right_object(typeexamples_nmea_path):
