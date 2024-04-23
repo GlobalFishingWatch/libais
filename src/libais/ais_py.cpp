@@ -181,10 +181,10 @@ ais_msg_to_pydict(const AisMsg* msg) {
 
 // Class A position report
 PyObject *
-ais1_2_3_to_pydict(const char *nmea_payload, const size_t pad) {
+ais1_2_3_to_pydict(const char *nmea_payload, const size_t pad, const bool best_effort) {
   assert(nmea_payload);
 
-  Ais1_2_3 msg(nmea_payload, pad);
+  Ais1_2_3 msg(nmea_payload, pad, best_effort);
   if (msg.had_error()) {
     PyErr_Format(ais_py_exception, "Ais1_2_3: %s",
                  AIS_STATUS_STRINGS[msg.get_error()]);
@@ -293,9 +293,9 @@ ais4_11_to_pydict(const char *nmea_payload, const size_t pad) {
 
 // Class A ship data
 PyObject *
-ais5_to_pydict(const char *nmea_payload, const size_t pad) {
+ais5_to_pydict(const char *nmea_payload, const size_t pad, const bool best_effort) {
   assert(nmea_payload);
-  Ais5 msg(nmea_payload, pad);
+  Ais5 msg(nmea_payload, pad, best_effort);
   if (msg.had_error()) {
     PyErr_Format(ais_py_exception, "Ais5: %s",
                  AIS_STATUS_STRINGS[msg.get_error()]);
@@ -3519,15 +3519,15 @@ extern "C" {
 
 static PyObject *
 decode(PyObject *self, PyObject *args) {
-  int _pad;
+  int _pad = 0;
   const char *nmea_payload;
-  // TODO(schwehr): what to do about if no pad bits?  Maybe warn and set to 0?
-  if (!PyArg_ParseTuple(args, "si", &nmea_payload, &_pad)) {
-    _pad = 0;
-    if (!PyArg_ParseTuple(args, "s", &nmea_payload)) {
-      PyErr_Format(ais_py_exception, "ais.decode: expected (str, int)");
-      return nullptr;
-    }
+  bool best_effort = false;
+
+  // number of pad bits is optional, defaults to 0
+  // best_effort is optional, defaults to false
+  if (!PyArg_ParseTuple(args, "s|ip", &nmea_payload, &_pad, &best_effort)) {
+    PyErr_Format(ais_py_exception, "ais.decode: expected (str, [int], [bool])");
+    return nullptr;
   }
   const size_t pad = _pad;
 
@@ -3536,14 +3536,14 @@ decode(PyObject *self, PyObject *args) {
   case '1':  // FALLTHROUGH - Class A Position
   case '2':  // FALLTHROUGH
   case '3':
-    return ais1_2_3_to_pydict(nmea_payload, pad);
+    return ais1_2_3_to_pydict(nmea_payload, pad, best_effort);
 
   case '4':  // FALLTHROUGH - 4 - Basestation report
   case ';':  // 11 - UTC date response
     return ais4_11_to_pydict(nmea_payload, pad);
 
   case '5':  // 5 - Ship and Cargo
-    return ais5_to_pydict(nmea_payload, pad);
+    return ais5_to_pydict(nmea_payload, pad, best_effort);
 
   case '6':  // 6 - Addressed binary message
     return ais6_to_pydict(nmea_payload, pad);
