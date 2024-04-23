@@ -41,8 +41,7 @@ import hashlib
 import logging
 import re
 
-import six
-import six.moves.queue as Queue
+import queue
 
 import ais
 from ais import util
@@ -98,18 +97,18 @@ def Parse(data):
     return None
 
   result.update({k: util.MaybeToNumber(v)
-                 for k, v in six.iteritems(result) if k in NUMERIC_FIELDS})
+                 for k, v in result.items() if k in NUMERIC_FIELDS})
 
   return result
 
 
-class UscgQueue(Queue.Queue):
+class UscgQueue(queue.Queue):
   """Treats NMEA without USCG station in metadata as from rUnknown."""
 
   def __init__(self):
     self.groups = {}
     self.line_num = 0
-    Queue.Queue.__init__(self)
+    queue.Queue.__init__(self)
     self.unknown_queue = vdm.BareQueue()
 
   def put(self, line, line_num=None):
@@ -130,14 +129,14 @@ class UscgQueue(Queue.Queue):
       }
       if metadata_match:
         msg['match'] = metadata_match
-      Queue.Queue.put(self, msg)
+      queue.Queue.put(self, msg)
       return
 
     if not metadata_match:
       logger.info('not metadata match')
       self.unknown_queue.put(line)
       if not self.unknown_queue.empty():
-        msg = Queue.Queue.get()
+        msg = queue.Queue.get()
         self.put(msg)
       return
 
@@ -158,7 +157,7 @@ class UscgQueue(Queue.Queue):
             'Unable to decode message: %s\n  %d %s', error, self.line_num, line)
         return
       decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
-      Queue.Queue.put(self, {
+      queue.Queue.put(self, {
           'line_nums': [line_num],
           'lines': [line],
           'decoded': decoded,
@@ -205,7 +204,7 @@ class UscgQueue(Queue.Queue):
       entry['decoded'] = decoded
     else:
       logger.info('Unable to process: %s', entry)
-    Queue.Queue.put(self, entry)
+    queue.Queue.put(self, entry)
     self.groups.pop(group_id)
 
 
